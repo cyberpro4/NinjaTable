@@ -5,7 +5,7 @@ var minify = require( 'minify' );
 
 var includes = [];
 
-var version = '0.1.1';
+var version = 'no';
 
 var outputDirectory = './bin';
 
@@ -14,6 +14,11 @@ var includes = [
 ];
 
 var output = '';
+
+packageInfoString = fs.readFileSync( 'package.json' );
+packageInfo = JSON.parse( packageInfoString );
+
+version = packageInfo.version;
 
 for( var i = 0; i < includes.length; i++ ){
 	
