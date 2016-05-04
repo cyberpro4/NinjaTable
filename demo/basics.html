@@ -1,0 +1,27 @@
+<html>
+	<head>
+	
+		<script src="https://code.jquery.com/jquery-1.11.3.js"></script>
+		<script src="../bin/ninjaTable.0.0.1.min.js"></script>
+		
+		<script>
+			$( document ).ready( function(){
+				$('#myNinjaTable').ninjaTable({
+					url: 'https://api.github.com/repositories?since=364',
+					fields: [ 'name' ]
+				});
+			} );
+			
+		</script>
+		
+		<link rel="stylesheet" href="../css/jquery.ninjaTable.base.css" >
+		
+	</head>
+	
+	<body>
+	
+		<table id="myNinjaTable">
+		</table>
+		
+	</body>
+</html>

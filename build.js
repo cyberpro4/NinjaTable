@@ -10,7 +10,7 @@ var version = 'no';
 var outputDirectory = './bin';
 
 var includes = [
-	'src/test.js'
+	'src/jquery.ninjaTable.js'
 ];
 
 var output = '';
