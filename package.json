@@ -1,6 +1,21 @@
 {
-  "name": "NinjaTable",
+  "name": "ninjatable",
+  
+  "version": "0.0.1",
+  
+  "decription" : "Full-Ajax based JQuery plugin for managing tables",
+  
+  "keywords" : [ "jquery" , "tables" , "ajax" , "ninja" , "table" ],
+  
+  "license" : "MIT",
+  
+  "repository" : { 
+	"type" : "git", 
+	"url" : "https://github.com/cyberpro4/NinjaTable.git"
+  }
+  
   "dependencies": {
     "minify": "^2.0.3"
   }
+  
 }
