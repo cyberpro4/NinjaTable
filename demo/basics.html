@@ -2,19 +2,22 @@
 	<head>
 	
 		<script src="https://code.jquery.com/jquery-1.11.3.js"></script>
-		<script src="../bin/ninjaTable.0.0.1.min.js"></script>
+		
+		<script src="../src/jquery.ninjaTable.js"></script>
 		
 		<script>
 			$( document ).ready( function(){
 				$('#myNinjaTable').ninjaTable({
 					url: 'https://api.github.com/repositories?since=364',
-					fields: [ 'name' ]
+					fields: [ 'id' , 'name' , 'html_url' ]
 				});
 			} );
 			
 		</script>
 		
 		<link rel="stylesheet" href="../css/jquery.ninjaTable.base.css" >
+		
+		<link rel="stylesheet" href="./demo.css" >
 		
 	</head>
 	

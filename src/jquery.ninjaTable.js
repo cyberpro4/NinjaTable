@@ -176,12 +176,54 @@
 
     };
 
+    // CLASS
 
-    var loadData = function (ninjaTable) {
+    var ninjaTable = function (table, options) {
 
-        var data = ajax(ninjaTable.options, function (result) {
+        this.table = table;
+		
+        this.options = options;
+		
+		this.sanitizeFields();
 
-            var body = $(ninjaTable.table).children('tbody');
+        initTable(this);
+		
+        this.loadData();
+
+        if (options.search)
+            loadSearch(this);
+			
+
+        return this;
+    };
+	
+	ninjaTable.prototype.sanitizeFields = function () {
+	
+		var fields = [];
+		
+		$.each( this.options.fields , function(){
+		
+			if( !this.label ){
+				fields.push( {
+					label: this,
+					name: this
+				} );
+			} else {
+				fields.push( this );
+			}
+				
+		} );
+		
+		this.options.fields = fields;
+	}
+	
+	ninjaTable.prototype.loadData = function () {
+	
+		var self = this;
+		
+		var data = ajax(self.options, function (result) {
+
+            var body = $(self.table).children('tbody');
 
             if (body.length == 0)
                 body = $('<tbody></tbody>');
@@ -190,22 +232,23 @@
             body.empty();
 
             var data = result.data;
+			if( !data )
+				data = result;
 
             $.each(data, function () {
 
                 var item = this;
 
                 var row = $('<tr></tr>');
-
-                $.each(item, function (i, v) {
-
-                    var cell = $('<td></td>');
-                    cell.html(v);
+				
+                $.each(self.options.fields,function(){
+				
+					var cell = $('<td></td>');
+					
+                    cell.html( item[ this.name ] );
+					
                     row.append(cell);
-
-                });
-
-                $.each(ninjaTable.options.fields,function(){
+					
                     if(this.custom){
                         row.append($('<td></td>').html(this.custom(item)));
                     }
@@ -217,10 +260,10 @@
             });
 
 
-            $(ninjaTable.table).append(body);
+            $(self.table).append(body);
 
-            if (ninjaTable.options.navigation)
-                loadNavigation(ninjaTable, result);
+            if (self.options.navigation)
+                loadNavigation(self, result);
 
 
         }, function (data) {
@@ -228,29 +271,11 @@
             error(data);
 
         });
-
-    };
-
-
-    // CLASS
-
-    var ninjaTable = function (table, options) {
-
-        this.table = table;
-        this.options = options;
-
-        initTable(this);
-        loadData(this);
-
-        if (options.search)
-            loadSearch(this);
-
-        return this;
-    };
-
+	};
+	
     ninjaTable.prototype.refresh = function () {
         debug('REFRESH');
-        loadData(this);
+        this.loadData();
     };
 
     ninjaTable.prototype.search = function (str) {
@@ -303,12 +328,6 @@
 
     $.fn.ninjaTable = function (arg, arg1, arg2) {
 
-
-        /* if (typeof(arg) != 'object')
-         if ($(this).data('ninjaTable'))
-         return $(this).data('ninjaTable');*/
-
-
         if ($(this).data('ninjaTable')) {
 
             debug('GET ISTANCE');
@@ -327,7 +346,7 @@
         }
 
 
-        debug('NEW ISTANCE');
+        //debug('NEW ISTANCE');
 
 
         // SETTINGS
