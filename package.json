@@ -15,7 +15,9 @@
   },
   
   "dependencies": {
-    "minify": "^2.0.3"
+    "minify": "^2.0.3",
+	"handlebars": "4.0.5",
+	"browserify": ""
   }
   
 }

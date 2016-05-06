@@ -72,130 +72,55 @@
     };
 
 
-    // TABLE
-
-    var initTable = function (ninjaTable) {
-
-        var table = $(ninjaTable.table);
-
-        table.children('tbody').remove();
-
-        if (table.children('thead').length == 0) {
-
-            var head = $('<thead></thead>');
-
-            var row = $('<tr></tr>');
-
-            $.each(ninjaTable.options.fields, function () {
-                row.append('<th>' + this.label + '</th>');
-            });
-
-            head.append(row);
-
-            table.append(head);
-        }
-
-
-    };
-
-    var loadSearch = function (ninjaTable) {
-
-        var table = $(ninjaTable.table);
-
-        var searchRow;
-
-
-        if (!(searchRow = ninjaTable.searchRow)) {
-            searchRow = $('<div></div>', {
-                class: 'row text-right small-12 medium-offset-6 medium-6 large-offset-8 large-4 search-input'
-            });
-            table.before(searchRow);
-        } else {
-            searchRow.empty();
-        }
-
-        var searchInput = $('<input />', {
-            type: 'text',
-            class: 'ninjaTableSearch',
-            placeholder: 'Cerca..'
-        });
-
-
-        searchInput.keyup(function (e) {
-            if (e.keyCode == 13) {
-                ninjaTable.search($(this).val());
-            }
-        });
-
-        searchRow.html(searchInput);
-
-        ninjaTable.searchRow = searchRow;
-
-    };
-
-    var loadNavigation = function (ninjaTable, data) {
-
-        debug('LOAD NAVIGATION');
-
-        var table = $(ninjaTable.table);
-
-        var navRow;
-
-
-        if (!(navRow = ninjaTable.navRow)) {
-            navRow = $('<div></div>', {
-                class: 'row text-right small-12 medium-offset-6 medium-6 large-offset-8 large-4 ninjaNav'
-            });
-            table.after(navRow);
-        } else {
-            navRow.empty();
-        }
-
-
-        ninjaTable.totPages = Math.ceil(data.count / ninjaTable.options.limit);
-
-        var page;
-        for (var i = 1; i <= ninjaTable.totPages; i++) {
-            page = $('<span></span>', {
-                class: 'ninjaTableGoTo',
-                goto: i
-            });
-            page.text(i);
-            navRow.append(page);
-            navRow.append(' - ');
-        }
-
-        $('.ninjaTableGoTo:not(.selected)').off().on('click', function () {
-            $('.ninjaTableGoTo').removeClass('selected');
-            $(this).addClass('selected');
-            ninjaTable.goToPage($(this).attr('goto'));
-        });
-
-        ninjaTable.navRow = navRow;
-
-
-    };
 
     // CLASS
 
     var ninjaTable = function (table, options) {
 
-        this.table = table;
+		// Default settings
+        var _options = {
+            url: null,
+            query: null,
+            orderBy: null,
+            order: 'ASC',
+            limit: 10,
+            page: 1,
+            fields: null,
+            search: true,
+            navigation: true
+
+        };
+
+        this.options = $.extend(_options, options);
 		
-        this.options = options;
+        this.table = table;
 		
 		this.sanitizeFields();
 
-        initTable(this);
+        this.initTable();
 		
         this.loadData();
 
         if (options.search)
-            loadSearch(this);
+            this.loadSearch();
 			
 
         return this;
     };
+	
+	ninjaTable.handlebars = function(){
+		
+		if( ninjaTable._handleBars )
+			return ninjaTable._handleBars;
+		
+		var hb = Handlebars;
+		
+		if( !hb )
+			hb = require('handlebars');
+		
+		ninjaTable._handleBars = hb;
+		return hb;
+	}
 	
 	ninjaTable.prototype.sanitizeFields = function () {
 	
@@ -263,7 +188,7 @@
             $(self.table).append(body);
 
             if (self.options.navigation)
-                loadNavigation(self, result);
+                self.loadNavigation(result);
 
 
         }, function (data) {
@@ -272,6 +197,114 @@
 
         });
 	};
+	
+	ninjaTable.prototype.initTable = function () {
+
+		var ninjaTable = this;
+		
+        var table = $(ninjaTable.table);
+
+        table.children('tbody').remove();
+
+        if (table.children('thead').length == 0) {
+
+            var head = $('<thead></thead>');
+
+            var row = $('<tr></tr>');
+
+            $.each(ninjaTable.options.fields, function () {
+                row.append('<th>' + this.label + '</th>');
+            });
+
+            head.append(row);
+
+            table.append(head);
+        }
+
+
+    };
+
+    ninjaTable.prototype.loadSearch = function () {
+
+		var ninjaTable = this;
+		
+        var table = $(ninjaTable.table);
+
+        var searchRow;
+
+
+        if (!(searchRow = ninjaTable.searchRow)) {
+            searchRow = $('<div></div>', {
+                class: 'row text-right small-12 medium-offset-6 medium-6 large-offset-8 large-4 search-input'
+            });
+            table.before(searchRow);
+        } else {
+            searchRow.empty();
+        }
+
+        var searchInput = $('<input />', {
+            type: 'text',
+            class: 'ninjaTableSearch',
+            placeholder: 'Cerca..'
+        });
+
+
+        searchInput.keyup(function (e) {
+            if (e.keyCode == 13) {
+                ninjaTable.search($(this).val());
+            }
+        });
+
+        searchRow.html(searchInput);
+
+        ninjaTable.searchRow = searchRow;
+
+    };
+
+    ninjaTable.prototype.loadNavigation = function (data) {
+
+        debug('LOAD NAVIGATION');
+
+		var ninjaTable = this;
+		
+        var table = $(this.table);
+
+        var navRow;
+
+
+        if (!(navRow = ninjaTable.navRow)) {
+            navRow = $('<div></div>', {
+                class: 'row text-right small-12 medium-offset-6 medium-6 large-offset-8 large-4 ninjaNav'
+            });
+            table.after(navRow);
+        } else {
+            navRow.empty();
+        }
+
+
+        ninjaTable.totPages = Math.ceil(data.count / ninjaTable.options.limit);
+
+        var page;
+        for (var i = 1; i <= ninjaTable.totPages; i++) {
+            page = $('<span></span>', {
+                class: 'ninjaTableGoTo',
+                goto: i
+            });
+            page.text(i);
+            navRow.append(page);
+            navRow.append(' - ');
+        }
+
+        $('.ninjaTableGoTo:not(.selected)').off().on('click', function () {
+            $('.ninjaTableGoTo').removeClass('selected');
+            $(this).addClass('selected');
+            ninjaTable.goToPage($(this).attr('goto'));
+        });
+
+        ninjaTable.navRow = navRow;
+
+
+    };
 	
     ninjaTable.prototype.refresh = function () {
         debug('REFRESH');
@@ -349,29 +382,11 @@
         //debug('NEW ISTANCE');
 
 
-        // SETTINGS
-
-        var _options = {
-            url: null,
-            query: null,
-            orderBy: null,
-            order: 'ASC',
-            limit: 10,
-            page: 1,
-            fields: null,
-            search: true,
-            navigation: true
-
-        };
-
-        options = $.extend(_options, arg);
-
-
         return this.each(function () {
 
-            debug(options);
+            //debug(options);
 
-            $(this).data('ninjaTable', new ninjaTable(this, options));
+            $(this).data('ninjaTable', new ninjaTable(this, arg));
 
             /// DA CONTINUARE
 
