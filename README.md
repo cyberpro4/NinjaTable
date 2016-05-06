@@ -12,7 +12,7 @@ Here's a list of available options:
     
     // Requested url: http://customsite.com?p=1&l=10&f=name
 ```
-You can also build your custom url-building function:
+You can also write your custom url-building function:
 ```javascript
     $( 'table' ).ninjaTable({
         url: function( options ){
