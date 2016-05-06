@@ -8,8 +8,22 @@
 		<script>
 			$( document ).ready( function(){
 				$('#myNinjaTable').ninjaTable({
-					url: 'https://api.github.com/repositories?since=364',
-					fields: ['name']
+					url: function( options ){
+						return 'https://api.github.com/search/repositories?q='
+								+ options.query
+								+ '&page='
+								+ options.page
+								+ '&per_page='+options.limit
+						;
+					},
+					cbTransformData: function( data ){
+						return {
+							data: data.items,
+							count: data.total_count
+						}
+					},
+					query: 'oct',
+					fields: [ 'id' , 'name' , 'html_url' ]
 				});
 			} );
 			
