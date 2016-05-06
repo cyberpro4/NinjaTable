@@ -8,8 +8,29 @@
 		<script>
 			$( document ).ready( function(){
 				$('#myNinjaTable').ninjaTable({
-					url: 'https://api.github.com/repositories?since=364',
-					fields: [ 'id' , 'name' , 'html_url' ]
+					//url: 'https://api.github.com/repositories?since=364',
+					url: function( options ){
+						//return 'https://api.github.com/orgs/zendframework/repos?page='+options.page+'&per_page='+options.limit;
+						var q = options.query;
+						if( !q )
+							q = 'zend';
+						return 'https://api.github.com/search/repositories?q='+q+'&page='+options.page+'&per_page='+options.limit;
+					},
+					cbTransformData: function( data ){
+						return {
+							data: data.items,
+							count: data.total_count
+						}
+					},
+					query: 'oct',
+					//limit: 1,
+					fields: [ 'id' , 'name' , 'html_url' ]/*,
+					cbLoadData: function( options , onDone , onError ){
+						onDone( {
+							data: [ { id: 0 , name: 'Claudio' , html_url: 'a' } , { id: 1 , name: 'Davide' , html_url: 'a' } ],
+							count: 2
+						} );
+					}*/
 				});
 			} );
 			

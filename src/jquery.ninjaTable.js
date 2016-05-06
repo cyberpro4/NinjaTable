@@ -14,71 +14,14 @@
 
     };
 
-    // AJAX
-
-    var ajax = function (params, onDone, onError) {
-
-        if (!params.url)
-            debug('URL EMPTY');
-
-        /*
-         url: null,
-         query: null,
-         orderBy: null,
-         order: 'ASC',
-         limit: 10,
-         page: 1,
-         fields: null
-         */
-
-        var url = params.url + '?';
-
-        if (params.query)
-            url += '&q=' + encodeURI(params.query);
-
-        if (params.orderBy)
-            url += '&o=' + params.orderBy;
-
-        if (params.limit)
-            url += '&l=' + params.limit;
-
-        if (params.page)
-            url += '&p=' + params.page;
-
-
-        if (params.fields.length > 0) {
-            url += '&f=';
-            $.each(params.fields, function () {
-                if(!this.custom)
-                    url += this.name + ',';
-            });
-        }
-
-        debug('START AJAX -> ' + url);
-
-        $.ajax({
-            url: url
-        }).done(function (data) {
-            debug('REQUEST DONE');
-            debug(data);
-            if (onDone)
-                onDone(data);
-        }).error(function (error) {
-            error(error);
-            if (onError)
-                onError(data);
-        });
-
-    };
-
-
-
     // CLASS
 
     var ninjaTable = function (table, options) {
 
 		// Default settings
         var _options = {
+
+            // String with base url or function returning full url
             url: null,
             query: null,
             orderBy: null,
@@ -87,8 +30,13 @@
             page: 1,
             fields: null,
             search: true,
-            navigation: true
+            navigation: true,
 
+            // Callback for override data loading
+            cbLoadData: null,
+
+            // Callback for transforming data structure
+            cbTransformData: null,
         };
 
         this.options = $.extend(_options, options);
@@ -99,9 +47,9 @@
 
         this.initTable();
 		
-        this.loadData();
+        this.refresh();
 
-        if (options.search)
+        if( this.options.search )
             this.loadSearch();
 			
 
@@ -142,60 +90,51 @@
 		this.options.fields = fields;
 	}
 	
-	ninjaTable.prototype.loadData = function () {
+	ninjaTable.prototype.loadData = function ( options , onDone , onError ) {
 	
 		var self = this;
-		
-		var data = ajax(self.options, function (result) {
 
-            var body = $(self.table).children('tbody');
+        // Default ajax loading
+        var _fncLoad = function( params , onDone , onError ){
+            if (!params.url)
+                debug('URL EMPTY');
 
-            if (body.length == 0)
-                body = $('<tbody></tbody>');
+            /*
+             url: null,
+             query: null,
+             orderBy: null,
+             order: 'ASC',
+             limit: 10,
+             page: 1,
+             fields: null
+             */
 
+            if( params.url.length ) // url is string
+                url = self.buildUrl( params );
 
-            body.empty();
+            if( typeof( params.url ) == 'function' )
+                url = params.url( params );
 
-            var data = result.data;
-			if( !data )
-				data = result;
+            debug('START AJAX -> ' + url);
 
-            $.each(data, function () {
-
-                var item = this;
-
-                var row = $('<tr></tr>');
-				
-                $.each(self.options.fields,function(){
-				
-					var cell = $('<td></td>');
-					
-                    cell.html( item[ this.name ] );
-					
-                    row.append(cell);
-					
-                    if(this.custom){
-                        row.append($('<td></td>').html(this.custom(item)));
-                    }
-                });
-
-
-
-                body.append(row);
+            $.ajax({
+                url: url
+            }).done(function (data) {
+                debug('REQUEST DONE');
+                debug(data);
+                if (onDone)
+                    onDone(data);
+            }).error(function (error) {
+                error(error);
+                if (onError)
+                    onError(data);
             });
+        };
 
+        if( this.options.cbLoadData )
+            _fncLoad = this.options.cbLoadData;
 
-            $(self.table).append(body);
-
-            if (self.options.navigation)
-                self.loadNavigation(result);
-
-
-        }, function (data) {
-
-            error(data);
-
-        });
+		_fncLoad( options, onDone ,  onError );
 	};
 	
 	ninjaTable.prototype.initTable = function () {
@@ -224,6 +163,33 @@
 
     };
 
+    ninjaTable.prototype.buildUrl = function ( params ) {
+        var url = params.url + '?';
+
+        if (params.query)
+            url += '&q=' + encodeURI(params.query);
+
+        if (params.orderBy)
+            url += '&o=' + params.orderBy;
+
+        if (params.limit)
+            url += '&l=' + params.limit;
+
+        if (params.page)
+            url += '&p=' + params.page;
+
+
+        if (params.fields.length > 0) {
+            url += '&f=';
+            $.each(params.fields, function () {
+                if(!this.custom)
+                    url += this.name + ',';
+            });
+        }
+
+        return url;
+    };
+
     ninjaTable.prototype.loadSearch = function () {
 
 		var ninjaTable = this;
@@ -235,6 +201,7 @@
 
         if (!(searchRow = ninjaTable.searchRow)) {
             searchRow = $('<div></div>', {
+                // ToDo: Remove
                 class: 'row text-right small-12 medium-offset-6 medium-6 large-offset-8 large-4 search-input'
             });
             table.before(searchRow);
@@ -245,7 +212,8 @@
         var searchInput = $('<input />', {
             type: 'text',
             class: 'ninjaTableSearch',
-            placeholder: 'Cerca..'
+            placeholder: 'Cerca..',
+            value: ninjaTable.options.query
         });
 
 
@@ -308,7 +276,64 @@
 	
     ninjaTable.prototype.refresh = function () {
         debug('REFRESH');
-        this.loadData();
+        
+		var self = this;
+		
+		this.loadData( self.options, function (result) {
+
+            if( self.options.cbTransformData ){
+                result = self.options.cbTransformData( result );
+            }
+
+            var body = $(self.table).children('tbody');
+
+            if (body.length == 0)
+                body = $('<tbody></tbody>');
+
+
+            body.empty();
+
+            var data = result.data;
+			if( !data )
+				data = result;
+
+            $.each(data, function () {
+
+                var item = this;
+
+                var row = $('<tr></tr>');
+				
+                $.each(self.options.fields,function(){
+				
+					var cell = $('<td></td>');
+					
+                    cell.html( item[ this.name ] );
+					
+                    row.append(cell);
+					
+                    if(this.custom){
+                        row.append($('<td></td>').html(this.custom(item)));
+                    }
+                });
+
+
+
+                body.append(row);
+            });
+
+
+            $(self.table).append(body);
+
+            if (self.options.navigation)
+                self.loadNavigation(result);
+
+
+        }, function (data) {
+
+            error(data);
+
+        });
+		
     };
 
     ninjaTable.prototype.search = function (str) {
