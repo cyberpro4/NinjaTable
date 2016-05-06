@@ -1,3 +1,58 @@
+
 * {
-	color: gray;
+	color: #3E3E3E;
+}
+
+body {
+	padding-left: 10%;
+	padding-right: 10%;
+}
+
+span.selected {
+	font-weight: bold;
+}
+
+table {
+	width: 100%;
+}
+
+tr {
+	
+}
+
+th,td {
+	padding: 5px;
+}
+
+th {
+	border-bottom:2px solid gray;
+	margin: 0;
+}
+
+tr td {
+	border-bottom: 1px solid gray;
+}
+
+tr:hover {
+	background-color: #EAEAEA;
+}
+
+.ninjaNav {
+	text-align: right;
+}
+
+.ninjaNav span {
+	background-color: #8BC34A;
+    color: #383838;
+    margin: 5px;
+    padding: 8px;
+    cursor: pointer;
+    min-width: 6px;
+    display: block;
+    float: left;
+    text-align: center;
+    min-width: 20px;
+    padding-bottom: 5px;
+    padding-top: 5px;
+    border: 1px solid #618A32;
 }

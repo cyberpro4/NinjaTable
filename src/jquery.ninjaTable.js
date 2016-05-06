@@ -229,6 +229,16 @@
 
     };
 
+	ninjaTable.prototype.buildPageButton = function ( pageNumber ) {
+		page = $('<span></span>', {
+			class: 'ninjaTableGoTo' + ( pageNumber == this.options.page ? ' selected' : '' ),
+			goto: pageNumber
+		});
+		page.text( pageNumber );
+		
+		return page;
+	}
+	
     ninjaTable.prototype.loadNavigation = function (data) {
 
         debug('LOAD NAVIGATION');
@@ -251,8 +261,25 @@
 
 
         ninjaTable.totPages = Math.ceil(data.count / ninjaTable.options.limit);
-
-        var page;
+		
+		var curPage = parseInt( ninjaTable.options.page );
+		
+		if( curPage - 3 > 1 ){ // First page is not visible
+			navRow.append( ninjaTable.buildPageButton( 1 ) );
+		}
+		
+		for( var p = curPage - 3; p <= curPage; p++ ){
+			if( p <= 0 ) continue;
+            navRow.append( ninjaTable.buildPageButton( p ) );
+		}
+		
+		for( var p = curPage +1 , c = 3; p < ninjaTable.totPages && c > 0; p++ , c-- ){
+            navRow.append( ninjaTable.buildPageButton( p ) );
+		}
+		
+		navRow.append( ninjaTable.buildPageButton( ninjaTable.totPages ) );
+		
+        /*var page;
         for (var i = 1; i <= ninjaTable.totPages; i++) {
             page = $('<span></span>', {
                 class: 'ninjaTableGoTo',
@@ -261,7 +288,7 @@
             page.text(i);
             navRow.append(page);
             navRow.append(' - ');
-        }
+        }*/
 
         $('.ninjaTableGoTo:not(.selected)').off().on('click', function () {
             $('.ninjaTableGoTo').removeClass('selected');
