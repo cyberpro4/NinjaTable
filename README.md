@@ -43,3 +43,52 @@ You can also write your custom url-building function:
  - **navigation** : *\[optional, default: true\] \( Boolean \)*
  - **cbLoadData** : *\[optional\] \( Function \)*
  - **cbTransformData** : *\[optional\] \( Function \)*
+
+## Templating
+
+By default ninjaTable will build the most common and anonymous table structure: whenever you need to specify a custom html/css structure (as for bootstrap or zurb), just put it inside.
+
+You can specify only <thead> tag like below:
+
+```html
+ <script> 
+   $('.table').ninjaTable({
+     url: 'http://customsite.com',
+     fields: ['column_1','url']
+   } ); 
+ </script>
+ 
+ <table class="table">
+    <thead>
+       <th class="thead">
+          <td class="thead_col1">Column1</td>
+          <td class="thead_col2">Url</td>
+       </th>
+    </thead>
+ </table>
+```
+
+You can also write the per-row html template:
+
+```html
+ <script> 
+   $('.table').ninjaTable({
+     url: 'http://customsite.com', fields: ['column_1','url']
+   } ); 
+ </script>
+ 
+ <table class="table">
+    <thead>
+       <th class="thead">
+          <td class="thead_col1">Column1</td>
+          <td class="thead_col2">Url</td>
+       </th>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="tbody_col1"></td>
+        <td class="tbody_col2" data-custom-value="45"></td>
+      </tr>
+    </tbody>
+ </table>
+```
