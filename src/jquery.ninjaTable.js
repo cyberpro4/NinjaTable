@@ -283,7 +283,8 @@
 
         if (!(navRow = ninjaTable.navRow)) {
             navRow = $('<div></div>', {
-                class: 'row text-right small-12 medium-offset-6 medium-6 large-offset-8 large-4 ninjaNav'
+				// Removed
+                //class: 'row text-right small-12 medium-offset-6 medium-6 large-offset-8 large-4 ninjaNav'
             });
             table.after(navRow);
         } else {
