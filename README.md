@@ -3,7 +3,7 @@ Full-Ajax based JQuery plugin for managing tables
 
 ## Options
 Here's a list of available options:
- - **url** : [required] ( String | Function ) A string containing base url for ajax request or a function returning the full ajax url for obtaining data.
+ - **url** : *\[required\] \( String | Function \)* A string containing base url for ajax request or a function returning the full ajax url for obtaining data.
 ```javascript
     $( 'table' ).ninjaTable({
         url: 'http://customsite.com',
@@ -25,7 +25,7 @@ You can also write your custom url-building function:
     // Requested url: http://customsite.com?page=1&limit=10
 ```
 
- - **fields** : [required] ( Array ) An array containing each table columns as String or more descriptive object:
+ - **fields** : *\[required\] \( Array \)* An array containing each table columns as String or more descriptive object:
 ```javascript
     $( 'table' ).ninjaTable({
         url: 'http://customsite.com',
@@ -34,12 +34,12 @@ You can also write your custom url-building function:
         ] 
     });
 ```
- - **query** : [optional] ( String )
- - **orderBy** : [optional] ( String )
- - **order** : [optional] ( String )
- - **limit** : [optional, default: 10] ( Number )
- - **page** : [optional, default: 1] ( Number )
- - **search** : [optional, default: false] ( String )
- - **navigation** : [optional, default: true] ( Boolean )
- - **cbLoadData** : [optional] ( Function )
- - **cbTransformData** : [optional] ( Function )
+ - **query** : *\[optional\] \( String \)*
+ - **orderBy** : *\[optional\] \( String \)*
+ - **order** : *\[optional\] \( String \)*
+ - **limit** : *\[optional, default: 10\] \( Number \)*
+ - **page** : *\[optional, default: 1\] \( Number )*
+ - **search** : *\[optional, default: false\] \( String \)*
+ - **navigation** : *\[optional, default: true\] \( Boolean \)*
+ - **cbLoadData** : *\[optional\] \( Function \)*
+ - **cbTransformData** : *\[optional\] \( Function \)*
