@@ -1,0 +1,62 @@
+<html>
+	<head>
+	
+		<script src="https://code.jquery.com/jquery-1.11.3.js"></script>
+		
+		<script src="../src/jquery.ninjaTable.js"></script>
+		
+		<script>
+			$( document ).ready( function(){
+				$('#myNinjaTable').ninjaTable({
+					url: function( options ){
+						return 'https://api.github.com/search/repositories?q='
+								+ options.query
+								+ '&page='
+								+ options.page
+								+ '&per_page='+options.limit
+						;
+					},
+					cbTransformData: function( data ){
+						return {
+							data: data.items,
+							count: data.total_count
+						}
+					},
+					query: 'oct',
+					fields: [ 'id' , 'name' , 'html_url' ]
+				});
+			} );
+			
+		</script>
+		
+		<style>
+			.asd {
+				color: red;
+			}
+		</style>
+		
+		<link rel="stylesheet" href="../css/jquery.ninjaTable.base.css" >
+		
+		<link rel="stylesheet" href="./demo.css" >
+		
+	</head>
+	
+	<body>
+	
+		<table id="myNinjaTable">
+			<thead>
+				<th>ID</th>
+				<th>Nome</th>
+				<th>Url Html</th>
+			</thead>
+			<tbody>
+				<tr>
+					<td class="test">riga1</td>
+					<td>riga2</td>
+					<td>riga3</td>
+				</tr>
+			</tbody>
+		</table>
+		
+	</body>
+</html>

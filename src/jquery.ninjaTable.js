@@ -143,26 +143,57 @@
 		
         var table = $(ninjaTable.table);
 
-        table.children('tbody').remove();
-
-        if (table.children('thead').length == 0) {
-
-            var head = $('<thead></thead>');
-
-            var row = $('<tr></tr>');
-
-            $.each(ninjaTable.options.fields, function () {
-                row.append('<th>' + this.label + '</th>');
+		// Search or create thead / th and tbody structure
+		if( table.children( 'thead' ).length == 0 ){
+			$( '<thead />' ).appendTo( table );
+		}
+		
+		if( table.find( 'thead th' ).length == 0 ){
+			$.each(ninjaTable.options.fields, function () {
+                table.find('thead').append('<th>' + this.label + '</th>');
             });
-
-            head.append(row);
-
-            table.append(head);
-        }
-
+		}
+		
+		if( table.children( 'tbody' ).length == 0 ){
+			$( '<tbody />' ).appendTo( table );
+		}
+		
+		// Search for a first tr as html template
+		if( table.children( 'tbody tr:first' ).length == 0 ){
+			ninjaTable.rowHtmlTemplate = table.find( 'tbody tr:first' );
+			table.find( 'tbody tr' ).remove();
+		}
 
     };
 
+	ninjaTable.prototype.buildRow = function ( item ) {
+		
+		var htmlTemplate = this.rowHtmlTemplate;
+		
+		if( !htmlTemplate ){ // Create default row template
+			htmlTemplate = '<tr>' + '<td></td>'.repeat( this.options.fields.length ) + '</tr>';
+		}
+		
+		var row = $(htmlTemplate).clone();
+		row = $(row).html('');
+				
+		$.each(this.options.fields,function( index ){
+		
+			var cell = $($(htmlTemplate).find('td')[index]).clone();
+			
+			$(cell).html( item[ this.name ] );
+			
+			
+			row.append(cell);
+			
+			if(this.custom){
+				row.append($('<td></td>').html(this.custom(item)));
+			}
+		});
+		
+		return row;
+	};
+	
     ninjaTable.prototype.buildUrl = function ( params ) {
         var url = params.url + '?';
 
@@ -328,23 +359,8 @@
 
                 var item = this;
 
-                var row = $('<tr></tr>');
+                row = self.buildRow( this );
 				
-                $.each(self.options.fields,function(){
-				
-					var cell = $('<td></td>');
-					
-                    cell.html( item[ this.name ] );
-					
-                    row.append(cell);
-					
-                    if(this.custom){
-                        row.append($('<td></td>').html(this.custom(item)));
-                    }
-                });
-
-
-
                 body.append(row);
             });
 
