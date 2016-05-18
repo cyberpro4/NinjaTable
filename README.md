@@ -21,12 +21,12 @@ For example, given a base url "http://customsite.com", the requested url for pag
 The expected output will be a JSON response like below:
 ```json
     {
-        data: [
+        "data": [
             { "name": "Apple" , "value": "1" },
             { "name": "Orange" , "value": "3" },
             { "name": "Banana" , "value": "5" }
         ],
-        count: 33
+        "count": 33
     }
 ```
 Where **data** is an array containing every items the table must display and **count** is the number of items (It will be used for pagination).
