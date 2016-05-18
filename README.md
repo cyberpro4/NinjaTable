@@ -1,5 +1,35 @@
 # NinjaTable
-Full-Ajax based JQuery plugin for managing tables
+Full-Ajax based JQuery plugin for managing tables.
+
+NinjaTable is a jQuery plugin that let you display any ajax data source inside a customizable html table.
+Some important features are:
+ - Pagination
+ - Items search
+ - Customizable html template
+ - Ajax data formatting
+
+## Basic ajax data source
+By default NinjaTable will format ajax request options as url arguments described below:
+ - **"p"** : Page number
+ - **"l"** : Per-page items limit
+ - **"f"** : Requested fields separated by comma
+
+For example, given a base url "http://customsite.com", the requested url for page 1, items limit 3 with fields "name" and "value" will be:
+```
+    http://customsite.com/?p=1&l=3&f=name,value
+```
+The expected output will be a JSON response like below:
+```json
+    {
+        data: [
+            { "name": "Apple" , "value": "1" },
+            { "name": "Orange" , "value": "3" },
+            { "name": "Banana" , "value": "5" }
+        ],
+        count: 33
+    }
+```
+Where **data** is an array containing every items the table must display and **count** is the number of items (It will be used for pagination).
 
 ## Options
 Here's a list of available options:
