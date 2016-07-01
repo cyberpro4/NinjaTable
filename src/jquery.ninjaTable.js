@@ -1,19 +1,5 @@
 (function ($) {
 
-    // UTILITIES
-
-    var debug = function (arg) {
-
-        console.log('[ninjaTable] DEBUG: ', arg);
-
-    };
-
-    var error = function (arg) {
-
-        console.error('[ninjaTable] ERROR: ', arg);
-
-    };
-
     // CLASS
 
     var ninjaTable = function (table, options) {
@@ -37,11 +23,22 @@
 
             // Callback for transforming data structure
             cbTransformData: null,
+
+            // Callback on data has changed (on page changed, on search , etc.. )
+            cbDataChanged: null,
+			
+			// Dump debug info
+			debug: false,
+			
+			// Show warning information
+			warning: true
         };
 
         this.options = $.extend(_options, options);
 		
         this.table = table;
+
+        this.lastData = null;
 		
 		this.sanitizeFields();
 
@@ -55,7 +52,7 @@
 
         return this;
     };
-	
+		
 	ninjaTable.handlebars = function(){
 		
 		if( ninjaTable._handleBars )
@@ -63,11 +60,25 @@
 		
 		var hb = Handlebars;
 		
-		if( !hb )
+		if( !hb && require != undefined )
 			hb = require('handlebars');
 		
 		ninjaTable._handleBars = hb;
 		return hb;
+	}
+	
+	ninjaTable.prototype.debug = function( arg ){
+		if( this.options.debug )
+			console.log('[ninjaTable] DEBUG: ', arg );
+	}
+
+    ninjaTable.prototype.warning = function( arg ){
+        if( this.options.warning )
+            console.log('[ninjaTable] WARNING: ', arg );
+    }
+	
+	ninjaTable.prototype.error = function( arg ){
+		console.error('[ninjaTable] ERROR: ', arg );
 	}
 	
 	ninjaTable.prototype.sanitizeFields = function () {
@@ -97,7 +108,7 @@
         // Default ajax loading
         var _fncLoad = function( params , onDone , onError ){
             if (!params.url)
-                debug('URL EMPTY');
+                self.error( 'No url specified!' );
 
             /*
              url: null,
@@ -115,13 +126,26 @@
             if( typeof( params.url ) == 'function' )
                 url = params.url( params );
 
-            debug('START AJAX -> ' + url);
+            self.debug('START AJAX -> ' + url);
 
             $.ajax({
                 url: url
             }).done(function (data) {
-                debug('REQUEST DONE');
-                debug(data);
+                self.debug('REQUEST DONE');
+				
+				if( typeof( data ) == 'string' ){
+					self.debug( 'The fetched data from server is a string: casting to object.' );
+
+                    try {
+					    data = JSON.parse( data );
+                    } catch( e ){
+                        self.error( 'Data fetched from server is bad formatted or invalid.' )
+                        self.error( 'JSON: ' + e.message );
+                    }
+				}
+				
+                self.debug(data);
+				
                 if (onDone)
                     onDone(data);
             }).error(function (error) {
@@ -152,14 +176,19 @@
 			$.each(ninjaTable.options.fields, function () {
                 table.find('thead').append('<th>' + this.label + '</th>');
             });
-		}
+		} else {
+
+            if( table.find( 'thead th' ) != this.options.fields.length ){
+                this.warning('The given fields count and <th> count mismatch.');
+            }
+        }
 		
 		if( table.children( 'tbody' ).length == 0 ){
 			$( '<tbody />' ).appendTo( table );
 		}
 		
 		// Search for a first tr as html template
-		if( table.children( 'tbody tr:first' ).length == 0 ){
+		if( table.children( 'tbody tr:first' ).length != 0 ){
 			ninjaTable.rowHtmlTemplate = table.find( 'tbody tr:first' );
 			table.find( 'tbody tr' ).remove();
 		}
@@ -180,8 +209,13 @@
 		$.each(this.options.fields,function( index ){
 		
 			var cell = $($(htmlTemplate).find('td')[index]).clone();
-			
-			$(cell).html( item[ this.name ] );
+
+            var cellHtml = '';
+
+            if( item[ this.name ] )
+                cellHtml = item[ this.name ];
+
+			$(cell).html( cellHtml );
 			
 			
 			row.append(cell);
@@ -272,7 +306,7 @@
 	
     ninjaTable.prototype.loadNavigation = function (data) {
 
-        debug('LOAD NAVIGATION');
+        this.debug('LOAD NAVIGATION');
 
 		var ninjaTable = this;
 		
@@ -334,7 +368,7 @@
     };
 	
     ninjaTable.prototype.refresh = function () {
-        debug('REFRESH');
+        this.debug('REFRESH');
         
 		var self = this;
 		
@@ -343,6 +377,21 @@
             if( self.options.cbTransformData ){
                 result = self.options.cbTransformData( result );
             }
+
+            if( result.data.length != self.options.limit && self.currentPage() == 1 ){
+                self.warning(
+                    'Fetched data count ('+
+                    result.data.length+
+                    ') mismatch the requested limit ('+
+                    self.options.limit+
+                    '). Fixing current limit to '+
+                    result.data.length
+                );
+
+                self.options.limit = result.data.length;
+            }
+
+            self.lastData = result;
 
             var body = $(self.table).children('tbody');
 
@@ -368,6 +417,9 @@
 
             $(self.table).append(body);
 
+            if( self.options.cbDataChanged )
+                self.options.cbDataChanged();
+
             if (self.options.navigation)
                 self.loadNavigation(result);
 
@@ -381,10 +433,28 @@
     };
 
     ninjaTable.prototype.search = function (str) {
-        debug('SEARCH: ' + str);
+        this.debug('SEARCH: ' + str);
         this.options.query = str;
         this.options.page = 1;
         this.refresh();
+    };
+
+    ninjaTable.prototype.currentPage = function () {
+        return this.options.page;
+    };
+
+    ninjaTable.prototype.pagesCount = function () {
+        if( !this.lastData )
+            return 0;
+
+        return Math.ceil(this.lastData.count / this.options.limit);
+    };
+
+    ninjaTable.prototype.itemsCount = function () {
+        if( !this.lastData )
+            return 0;
+
+        return this.lastData.count;
     };
 
     ninjaTable.prototype.prevPage = function () {
@@ -392,9 +462,9 @@
         var page = this.options.page - 1;
 
         if (page <= 0 || page > this.totPages)
-            return debug('PAGE ' + page + ' NOT EXISTS');
+            return this.debug('PAGE ' + page + ' NOT EXISTS');
 
-        debug('PREV PAGE (' + page + ')');
+        this.debug('PREV PAGE (' + page + ')');
         this.options.page--;
         this.refresh();
     };
@@ -404,22 +474,25 @@
         var page = this.options.page + 1;
 
         if (page <= 0 || page > this.totPages)
-            return debug('PAGE ' + page + ' NOT EXISTS');
+            return this.debug('PAGE ' + page + ' NOT EXISTS');
 
-        debug('NEXT PAGE (' + page + ')');
+        this.debug('NEXT PAGE (' + page + ')');
         this.options.page++;
         this.refresh();
     };
 
     ninjaTable.prototype.goToPage = function (page) {
 
+        if( typeof( page ) == 'string' )
+            page = parseInt(page);
+
         if (page <= 0 || page > this.totPages)
-            return debug('PAGE ' + page + ' NOT EXISTS');
+            return this.debug('PAGE ' + page + ' NOT EXISTS');
 
         if (page == this.options.page)
-            return debug('PAGE ' + page + ' IS ALREADY SELECTED ');
+            return this.debug('PAGE ' + page + ' IS ALREADY SELECTED ');
 
-        debug('GOTO PAGE (' + page + ')');
+        this.debug('GOTO PAGE (' + page + ')');
         this.options.page = page;
         this.refresh();
     };
@@ -429,31 +502,36 @@
 
 
     $.fn.ninjaTable = function (arg, arg1, arg2) {
-
+		
         if ($(this).data('ninjaTable')) {
 
-            debug('GET ISTANCE');
+            var ret = undefined;
+
+            $(this).data('ninjaTable').debug('GET ISTANCE');
 
             if (typeof (arg) == "string") {
                 if ($(this).data('ninjaTable')[arg]) {
-                    debug('CALL FUNCTION ' + arg);
-                    $(this).data('ninjaTable')[arg](arg1, arg2);
+                    $(this).data('ninjaTable').debug('CALL FUNCTION ' + arg);
+                    ret = $(this).data('ninjaTable')[arg](arg1, arg2);
                 }
             } else {
-                debug('ISTANCE ALREADY EXISTS');
+                $(this).data('ninjaTable').debug('ISTANCE ALREADY EXISTS');
             }
 
-            return;
+            if( ret )
+                return ret;
+
+            return this;
 
         }
 
 
-        //debug('NEW ISTANCE');
+        //self.debug('NEW ISTANCE');
 
 
         return this.each(function () {
 
-            //debug(options);
+            //self.debug(options);
 
             $(this).data('ninjaTable', new ninjaTable(this, arg));
 
